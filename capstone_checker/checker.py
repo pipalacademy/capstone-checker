@@ -37,10 +37,17 @@ def run_check(
         context: dict[str, Any],
         args: dict[str, Any]) -> CheckStatus:
     """
-    Each check should have a signature like this:
+    Each check should be defined like this:
 
     ```
+    @register_check()
     def check_name(context: dict, args: dict) -> Any:
+        ...
+
+    # OR
+
+    @regiser_check("check_name")
+    def this_name_wont_matter(context: dict, args: dict) -> Any:
         ...
     ```
 
@@ -64,3 +71,11 @@ def register_check(name=None):
         CHECKS[name or f.__name__] = f
         return f
     return decor
+
+
+def has_check(name: str) -> bool:
+    return name in CHECKS
+
+
+def get_check(name):
+    return CHECKS[name]
