@@ -1,5 +1,6 @@
 import argparse
 import importlib
+import json
 import logging
 import sys
 import yaml
@@ -35,7 +36,7 @@ def parse_args():
 
 
 def get_tasks(task_name=None):
-    capstone_config = yaml.load(open("capstone.yml"))
+    capstone_config = yaml.safe_load(open("capstone.yml"))
     if task_name is not None:
         return next(task
                     for task in capstone_config["tasks"]
@@ -77,18 +78,18 @@ def main():
             check_statuses = []
             for ck_i, check in enumerate(task["checks"], start=1):
                 check_status = run_check(
-                    check["name"], context=context, args=check["args"])
+                    check["name"], context=context, args=check["args"], debug=True)
                 check_statuses.append(check_status)
                 print(f"Check {ck_i}: {check['title']}, using {check['name']}")
-                print(yaml.dump(check_status.dict(), sort_keys=False))
+                print(json.dumps(check_status.dict(), indent=4))
 
             if all(c.status == "pass" for c in check_statuses):
                 print("Task completed successfully")
             elif any(c.status == "fail" for c in check_statuses):
-                print("Task failed")
+                print("Task failed. Stopping here")
                 break
             elif any(c.status == "error" for c in check_statuses):
-                print("Task errored")
+                print("Task errored. Stopping here")
                 break
             else:
                 c = next(c for c in check_statuses
@@ -114,7 +115,7 @@ def main():
 
         load_checks()
         for task in project.tasks:
-            for check in project.checks:
+            for check in task.checks:
                 if not has_check(check.name):
                     raise Exception(f"Check {check.name} is not registered")
                 elif not callable(get_check(check.name)):

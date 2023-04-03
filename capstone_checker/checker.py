@@ -1,4 +1,8 @@
+import logging
 from typing import Any
+
+
+logger = logging.getLogger(__name__)
 
 
 class CheckStatus:
@@ -35,7 +39,8 @@ class ValidationError(Exception):
 def run_check(
         name: str,
         context: dict[str, Any],
-        args: dict[str, Any]) -> CheckStatus:
+        args: dict[str, Any],
+        debug: bool = False) -> CheckStatus:
     """
     Each check should be defined like this:
 
@@ -59,8 +64,10 @@ def run_check(
     except ValidationError as e:
         return CheckStatus.fail(str(e))
     except Exception as e:
+        if debug:
+            logger.exception(e)
         # TODO: maybe log the whole traceback?
-        return CheckStatus.error(str(e))
+        return CheckStatus.error(repr(e))
     else:
         return CheckStatus.pass_("")
 
