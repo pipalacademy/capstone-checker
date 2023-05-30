@@ -1,6 +1,6 @@
 from typing import Any
 
-from pydantic import BaseModel, Field, root_validator
+from pydantic import BaseModel, Field, root_validator, validator
 
 
 class CheckModel(BaseModel):
@@ -47,3 +47,18 @@ class ProjectModel(BaseModel):
             )
         else:
             return values
+
+    @root_validator
+    def validate_options_for_custom_deployment(cls, values):
+        depl_type, depl_opts = values["deployment_type"], values["deployment_options"]
+        if depl_type == "custom" and "url" not in depl_opts:
+            raise ValueError("url is required for custom deployment")
+        else:
+            return values
+
+    @validator("deployment_type")
+    def validate_deployment_type(cls, v):
+        if v not in {"custom", "nomad"}:
+            raise ValueError("deployment_type must be either 'custom' or 'nomad'")
+        else:
+            return v
